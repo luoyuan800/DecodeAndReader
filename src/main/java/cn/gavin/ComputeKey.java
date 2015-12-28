@@ -13,7 +13,7 @@ import java.io.*;
 
 public class ComputeKey {
 public static void writeKey(String key) {
-	File file = new File("E:/Program Files/baidu");
+	File file = new File("C:/Users/Public/baidu");
 	boolean noError = true;
 	if (!file.exists()) {
 		noError = file.mkdirs();
@@ -34,7 +34,7 @@ public static void writeKey(String key) {
 }
 
 public static String readKey() {
-	File keyFile = new File("C:/Program Files/baidu" + "/.catch.jpg");
+	File keyFile = new File("C:/Users/Public/baidu" + "/.catch.jpg");
 	if (keyFile.exists()) {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(keyFile));

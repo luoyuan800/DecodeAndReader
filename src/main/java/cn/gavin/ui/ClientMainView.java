@@ -13,11 +13,14 @@ import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 /**
  * @author luoyuan
@@ -57,21 +60,29 @@ public class ClientMainView extends javax.swing.JFrame {
 
         jLabel1.setText("jLabel1");
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                if(sqlite!=null){
+                    sqlite.close();
+                }
+                System.exit(0);
+            }
+        });
         setTitle("数据列表");
         setResizable(false);
-
-        dataTable.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
-                        {null, null, null, null},
-                        {null, null, null, null},
-                        {null, null, null, null},
-                        {null, null, null, null}
-                },
-                new String[]{
-                        "Title 1", "Title 2", "Title 3", "Title 4"
-                }
-        ));
+//
+//        dataTable.setModel(new javax.swing.table.DefaultTableModel(
+//                new Object[][]{
+//                        {null, null, null, null},
+//                        {null, null, null, null},
+//                        {null, null, null, null},
+//                        {null, null, null, null}
+//                },
+//                new String[]{
+//                        "Title 1", "Title 2", "Title 3", "Title 4"
+//                }
+//        ));
         jScrollPane1.setViewportView(dataTable);
 
         prevPageButton.setText("上一页");
@@ -129,7 +140,7 @@ public class ClientMainView extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 577, Short.MAX_VALUE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1000, Short.MAX_VALUE)
                         .addComponent(jSeparator1)
                         .addGroup(layout.createSequentialGroup()
                                 .addGap(44, 44, 44)
@@ -171,6 +182,10 @@ public class ClientMainView extends javax.swing.JFrame {
             loadData(page);
         } else {
             nextPageButton.setEnabled(false);
+
+        }
+        if(page > 1){
+            prevPageButton.setEnabled(true);
         }
     }//GEN-LAST:event_nextPageButtonActionPerformed
 
@@ -181,6 +196,9 @@ public class ClientMainView extends javax.swing.JFrame {
             loadData(page);
         } else {
             prevPageButton.setEnabled(false);
+        }
+        if(page < Integer.parseInt(totalPage.getText())){
+            nextPageButton.setEnabled(true);
         }
     }//GEN-LAST:event_prevPageButtonActionPerformed
 
@@ -284,6 +302,7 @@ public class ClientMainView extends javax.swing.JFrame {
         }
     }
 
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField currentPage;
     private javax.swing.JTable dataTable;
@@ -311,19 +330,23 @@ public class ClientMainView extends javax.swing.JFrame {
         if (sqlite != null) {
             this.page = page;
             currentPage.setText(page + "");
-            ResultSet resultSet = sqlite.query(page, 50);
-            Object[][] cells = new Object[50][10];
+            ArrayList<String[]> resultSet= sqlite.query(page, 50);
+            Object[][] cells = new Object[50][11];
             try {
                 int i = 0;
-                while (resultSet.next()) {
+                for(String[] result : resultSet) {
                     Object[] cell = cells[i];
-                    for (int j = 1; j < 11; j++) {
-                        cell[j] = decode.decode(resultSet.getString(j + 1));
+                    for (int j = 0; j < 11; j++) {
+                        if(j != 0) {
+                            cell[j] = decode.decode(result[j]);
+                        }else{
+                            cell[j] = result[j];
+                        }
+                        System.out.println(cell[j]);
                     }
                     cells[i] = cell;
+                    i++;
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             } catch (IllegalBlockSizeException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             } catch (BadPaddingException e) {
@@ -332,8 +355,8 @@ public class ClientMainView extends javax.swing.JFrame {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
             TableModel model = dataTable.getModel();
-            if (model == null) {
-                model = new DefaultTableModel(cells, new String[]{"联系人", "手机"
+            if (model == null || !(model instanceof DefaultTableModel) || model.getRowCount() == 0) {
+                model = new DefaultTableModel(cells, new String[]{"id","联系人", "手机"
                         , "固定电话", "公司名称", "主营产品", "公司地址", "注册资本", "法人代表", "员工人数",
                         "创建时间"});
                 dataTable.setModel(model);

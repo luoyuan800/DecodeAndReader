@@ -10,6 +10,7 @@
 package cn.gavin;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 public class SqliteHelper {
 private Connection connection;
@@ -60,12 +61,21 @@ public Connection getConnection(){
 	return connection;
 }
 
-public ResultSet query(int page, int rows){
-	String sql = "select * from table order by id limit " + rows + " offset " + (page-1)*rows;
+public ArrayList<String[]> query(int page, int rows){
+	String sql = "select * from test order by id limit " + rows + " offset " + (page-1)*rows;
 	Statement statement = null;
 	try {
+		ArrayList<String[]> result = new ArrayList<String[]>();
 		statement = connection.createStatement();
-		return statement.executeQuery(sql);
+		ResultSet resultSet =  statement.executeQuery(sql);
+		while(resultSet.next()){
+			String[] cell = new String[11];
+			for(int i =0 ;i <11; i++){
+				cell[i] = resultSet.getString(i+1);
+			}
+			result.add(cell);
+		}
+		return result;
 	} catch (SQLException e) {
 		e.printStackTrace();
 	} finally {
@@ -81,12 +91,14 @@ public ResultSet query(int page, int rows){
 }
 
 public int getTotalPage(int row){
-	String sql = "select count(*) from table";
+	String sql = "select count(*) from test";
 	Statement statement = null;
 	try {
 		statement = connection.createStatement();
 		ResultSet resultSet = statement.executeQuery(sql);
-		return resultSet.getInt(0)/row + 1;
+		if(resultSet.next()) {
+			return resultSet.getInt(1) / row + 1;
+		}
 	} catch (SQLException e) {
 		e.printStackTrace();
 	} finally {
